@@ -96,6 +96,7 @@
         "fault": "Fault",
         "diag": "Diagnostic",
         "extpump": "External pump",
+        "extdev": "External device",
         "outdoorSensorConnected": "Outdoor sensor connected",
         "outdoorSensorRssi": "Outdoor sensor RSSI",
         "outdoorSensorHumidity": "Outdoor sensor humidity",
@@ -179,6 +180,7 @@
         "outdorSensor": "Outdoor sensor settings",
         "indoorSensor": "Indoor sensor settings",
         "extPump": "External pump settings",
+        "extDev": "External device settings",
         "cascadeControl": "Cascade control settings"
       },
 
@@ -335,6 +337,13 @@
         "postCirculationTime": "Post circulation time <small>(min)</small>",
         "antiStuckInterval": "Anti stuck interval <small>(days)</small>",
         "antiStuckTime": "Anti stuck time <small>(min)</small>"
+      },
+
+      "extDev": {
+        "use": "Use external device",
+        "gpio": "Relay GPIO",
+        "state": "State",
+        "caption": "Caption"
       },
 
       "cascadeControl": {

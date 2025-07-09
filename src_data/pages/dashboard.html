@@ -115,6 +115,10 @@
                   <td><input type="radio" id="ot-external-pump" aria-invalid="false" checked disabled /></td>
                 </tr>
                 <tr>
+                  <th scope="row" data-i18n>dashboard.state.extdev</th>
+                  <td><input type="radio" id="ot-external-dev" aria-invalid="false" checked disabled /></td>
+                </tr>
+                <tr>
                   <th scope="row" data-i18n>dashboard.state.outdoorSensorConnected</th>
                   <td><input type="radio" id="outdoor-sensor-connected" aria-invalid="false" checked disabled /></td>
                 </tr>
@@ -433,6 +437,7 @@
             setState('#ot-fault', result.states.fault);
             setState('#ot-diagnostic', result.states.diagnostic);
             setState('#ot-external-pump', result.states.externalPump);
+            setState('#ot-external-dev', result.states.externalDev);
             setState('#outdoor-sensor-connected', result.sensors.outdoor.connected);
             setState('#indoor-sensor-connected', result.sensors.indoor.connected);
             setState('#cc-input', result.cascadeControl.input);

@@ -346,6 +346,9 @@ protected:
     this->haHelper->publishInputEquithermFactorK(false);
     this->haHelper->publishInputEquithermFactorT(false);
 
+    // ext device
+    this->haHelper->publishSwitchExtDevice(String(settings.externalDev.caption), false);
+
     // states
     this->haHelper->publishStateStatus();
     this->haHelper->publishStateEmergency();
@@ -355,6 +358,7 @@ protected:
     this->haHelper->publishStateFault();
     this->haHelper->publishStateDiagnostic();
     this->haHelper->publishStateExtPump(false);
+    this->haHelper->publishStateExtDev(String(settings.externalDev.caption), false);
 
     // sensors
     this->haHelper->publishSensorModulation();

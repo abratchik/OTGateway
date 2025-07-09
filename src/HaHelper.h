@@ -6,48 +6,73 @@ public:
   static const byte TEMP_SOURCE_HEATING = 0;
   static const byte TEMP_SOURCE_INDOOR = 1;
 
-  bool publishSwitchHeating(bool enabledByDefault = true) {
+  bool publishSwitch(const String& objectid, const String& name, const String& value_template,
+                     const String& payload_on, const String& payload_off,
+                     const String& icon_name, bool enabledByDefault = true) {
     JsonDocument doc;
     doc[FPSTR(HA_AVAILABILITY)][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
     doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("heating"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("heating"));
+    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(objectid);
+    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(objectid);
     doc[FPSTR(HA_ENTITY_CATEGORY)] = F("config");
-    doc[FPSTR(HA_NAME)] = F("Heating");
-    doc[FPSTR(HA_ICON)] = F("mdi:radiator");
+    doc[FPSTR(HA_NAME)] = name;
+    doc[FPSTR(HA_ICON)] = icon_name;
     doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("settings"));
     doc[FPSTR(HA_STATE_ON)] = true;
     doc[FPSTR(HA_STATE_OFF)] = false;
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ value_json.heating.enable }}");
+    doc[FPSTR(HA_VALUE_TEMPLATE)] = value_template;
     doc[FPSTR(HA_COMMAND_TOPIC)] = this->getDeviceTopic(F("settings/set"));
-    doc[FPSTR(HA_PAYLOAD_ON)] = F("{\"heating\": {\"enable\" : true}}");
-    doc[FPSTR(HA_PAYLOAD_OFF)] = F("{\"heating\": {\"enable\" : false}}");
+    doc[FPSTR(HA_PAYLOAD_ON)] = payload_on;
+    doc[FPSTR(HA_PAYLOAD_OFF)] = payload_off;
     doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
     doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_SWITCH), F("heating")).c_str(), doc);
+    return this->publish(this->getTopic(String(FPSTR(HA_ENTITY_SWITCH)), objectid ).c_str(), doc);
+  }
+
+  bool publishBinarySensorState(const String& objectid, const String& name,
+                    const String& device_class, 
+                    const String& value_template, const String& avail_template,
+                    const String& icon_name, bool enabledByDefault = true) {
+    JsonDocument doc;
+    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
+    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
+    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = avail_template;
+    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
+    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
+    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(objectid);
+    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(objectid);
+    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
+    doc[FPSTR(HA_DEVICE_CLASS)] = device_class;
+    doc[FPSTR(HA_NAME)] = name;
+    doc[FPSTR(HA_ICON)] = icon_name;
+    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
+    doc[FPSTR(HA_VALUE_TEMPLATE)] = value_template;
+    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
+    doc.shrinkToFit();
+
+    return this->publish(this->getTopic(String(FPSTR(HA_ENTITY_BINARY_SENSOR)), objectid).c_str(), doc);
+  }
+
+  bool publishSwitchHeating(bool enabledByDefault = true) {
+
+    return publishSwitch(F("heating"), F("Heating"), F("{{ value_json.heating.enable }}"),
+                          F("{\"heating\": {\"enable\" : true}}"), F("{\"heating\": {\"enable\" : false}}"),
+                          F("mdi:radiator"), enabledByDefault );
   }
 
   bool publishSwitchHeatingTurbo(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("heating_turbo"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("heating_turbo"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("config");
-    doc[FPSTR(HA_NAME)] = F("Turbo heating");
-    doc[FPSTR(HA_ICON)] = F("mdi:rocket-launch-outline");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("settings"));
-    doc[FPSTR(HA_STATE_ON)] = true;
-    doc[FPSTR(HA_STATE_OFF)] = false;
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ value_json.heating.turbo }}");
-    doc[FPSTR(HA_COMMAND_TOPIC)] = this->getDeviceTopic(F("settings/set"));
-    doc[FPSTR(HA_PAYLOAD_ON)] = F("{\"heating\": {\"turbo\" : true}}");
-    doc[FPSTR(HA_PAYLOAD_OFF)] = F("{\"heating\": {\"turbo\" : false}}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_SWITCH), F("heating_turbo")).c_str(), doc);
+    return publishSwitch(F("heating_turbo"), F("Turbo Heating"), F("{{ value_json.heating.turbo }}"),
+                      F("{\"heating\": {\"turbo\" : true}}"), F("{\"heating\": {\"turbo\" : false}}"),
+                      F("mdi:rocket-launch-outline"), enabledByDefault );
+
+  }
+
+  bool publishSwitchExtDevice(const String& caption, bool enabledByDefault = true) {
+    return publishSwitch(F("extdev"), caption, F("{{ value_json.externalDev.state }}"),
+                      F("{\"externalDev\": {\"state\" : true}}"), F("{\"externalDev\": {\"state\" : false}}"),
+                      F("mdi:toggle-switch-outline"), enabledByDefault );
   }
 
   bool publishInputHeatingTarget(UnitSystem unit = UnitSystem::METRIC, byte minTemp = 20, byte maxTemp = 90, bool enabledByDefault = true) {
@@ -295,25 +320,11 @@ public:
 
 
   bool publishSwitchDhw(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("dhw"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("dhw"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("config");
-    doc[FPSTR(HA_NAME)] = F("DHW");
-    doc[FPSTR(HA_ICON)] = F("mdi:water-pump");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("settings"));
-    doc[FPSTR(HA_STATE_ON)] = true;
-    doc[FPSTR(HA_STATE_OFF)] = false;
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ value_json.dhw.enable }}");
-    doc[FPSTR(HA_COMMAND_TOPIC)] = this->getDeviceTopic(F("settings/set"));
-    doc[FPSTR(HA_PAYLOAD_ON)] = F("{\"dhw\": {\"enable\" : true}}");
-    doc[FPSTR(HA_PAYLOAD_OFF)] = F("{\"dhw\": {\"enable\" : false}}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_SWITCH), F("dhw")).c_str(), doc);
+    return publishSwitch(F("dhw"), F("DHW"), F("{{ value_json.dhw.enable }}"),
+                  F("{\"dhw\": {\"enable\" : true}}"), F("{\"dhw\": {\"enable\" : false}}"),
+                  F("mdi:water-pump"), enabledByDefault );
+    
   }
 
   bool publishInputDhwTarget(UnitSystem unit = UnitSystem::METRIC, byte minTemp = 40, byte maxTemp = 60, bool enabledByDefault = true) {
@@ -478,25 +489,11 @@ public:
 
 
   bool publishSwitchPid(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("pid"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("pid"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("config");
-    doc[FPSTR(HA_NAME)] = F("PID");
-    doc[FPSTR(HA_ICON)] = F("mdi:chart-bar-stacked");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("settings"));
-    doc[FPSTR(HA_STATE_ON)] = true;
-    doc[FPSTR(HA_STATE_OFF)] = false;
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ value_json.pid.enable }}");
-    doc[FPSTR(HA_COMMAND_TOPIC)] = this->getDeviceTopic(F("settings/set"));
-    doc[FPSTR(HA_PAYLOAD_ON)] = F("{\"pid\": {\"enable\" : true}}");
-    doc[FPSTR(HA_PAYLOAD_OFF)] = F("{\"pid\": {\"enable\" : false}}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_SWITCH), F("pid")).c_str(), doc);
+    return publishSwitch(F("pid"), F("PID"), F("{{ value_json.pid.enable }}"),
+              F("{\"pid\": {\"enable\" : true}}"), F("{\"pid\": {\"enable\" : false}}"),
+              F("mdi:chart-bar-stacked"), enabledByDefault );
+    
   }
 
   bool publishInputPidFactorP(bool enabledByDefault = true) {
@@ -663,25 +660,11 @@ public:
 
 
   bool publishSwitchEquitherm(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("equitherm"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("equitherm"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("config");
-    doc[FPSTR(HA_NAME)] = F("Equitherm");
-    doc[FPSTR(HA_ICON)] = F("mdi:sun-snowflake-variant");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("settings"));
-    doc[FPSTR(HA_STATE_ON)] = true;
-    doc[FPSTR(HA_STATE_OFF)] = false;
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ value_json.equitherm.enable }}");
-    doc[FPSTR(HA_COMMAND_TOPIC)] = this->getDeviceTopic(F("settings/set"));
-    doc[FPSTR(HA_PAYLOAD_ON)] = F("{\"equitherm\": {\"enable\" : true}}");
-    doc[FPSTR(HA_PAYLOAD_OFF)] = F("{\"equitherm\": {\"enable\" : false}}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_SWITCH), F("equitherm")).c_str(), doc);
+    return publishSwitch(F("equitherm"), F("Equitherm"), F("{{ value_json.equitherm.enable }}"),
+          F("{\"equitherm\": {\"enable\" : true}}"), F("{\"equitherm\": {\"enable\" : false}}"),
+          F("mdi:sun-snowflake-variant"), enabledByDefault );
+
   }
 
   bool publishInputEquithermFactorN(bool enabledByDefault = true) {
@@ -811,108 +794,58 @@ public:
   }
 
   bool publishStateHeating(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}");
-    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("heating"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("heating"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("running");
-    doc[FPSTR(HA_NAME)] = F("Heating");
-    doc[FPSTR(HA_ICON)] = F("mdi:radiator");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.heating, 'ON', 'OFF') }}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_BINARY_SENSOR), F("heating")).c_str(), doc);
+    return publishBinarySensorState(F("heating"),F("Heating"),
+                                    F("running"),
+                                    F("{{ iif(value_json.states.heating, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:radiator"),enabledByDefault);
   }
 
   bool publishStateDhw(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}");
-    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("dhw"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("dhw"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("running");
-    doc[FPSTR(HA_NAME)] = F("DHW");
-    doc[FPSTR(HA_ICON)] = F("mdi:water-pump");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.dhw, 'ON', 'OFF') }}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
+    
+    return publishBinarySensorState(F("dhw"),F("DHW"),
+                                    F("running"),
+                                    F("{{ iif(value_json.states.dhw, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:water-pump"), enabledByDefault);
+  }
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_BINARY_SENSOR), F("dhw")).c_str(), doc);
+  bool publishStateExtDev(const String& caption,  bool enabledByDefault = true) {
+    
+    return publishBinarySensorState(F("extdev"), caption,
+                                    F("running"),
+                                    F("{{ iif(value_json.states.externalDev, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:toggle-switch"), enabledByDefault);
   }
 
   bool publishStateFlame(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}");
-    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("flame"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("flame"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("running");
-    doc[FPSTR(HA_NAME)] = F("Flame");
-    doc[FPSTR(HA_ICON)] = F("mdi:fire");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.flame, 'ON', 'OFF') }}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_BINARY_SENSOR), F("flame")).c_str(), doc);
+    return publishBinarySensorState(F("flame"),F("Flame"),
+                                    F("running"),
+                                    F("{{ iif(value_json.states.flame, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:fire"), enabledByDefault);
   }
 
   bool publishStateFault(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}");
-    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("fault"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("fault"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("problem");
-    doc[FPSTR(HA_NAME)] = F("Fault");
-    doc[FPSTR(HA_ICON)] = F("mdi:water-boiler-alert");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.fault, 'ON', 'OFF') }}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_BINARY_SENSOR), F("fault")).c_str(), doc);
+    return publishBinarySensorState(F("fault"),F("Fault"),
+                                    F("problem"),
+                                    F("{{ iif(value_json.states.fault, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:water-boiler-alert"), enabledByDefault);
   }
 
   bool publishStateDiagnostic(bool enabledByDefault = true) {
-    JsonDocument doc;
-    doc[FPSTR(HA_AVAILABILITY)][0][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("status"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_AVAILABILITY)][1][FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}");
-    doc[FPSTR(HA_AVAILABILITY_MODE)] = F("all");
-    doc[FPSTR(HA_ENABLED_BY_DEFAULT)] = enabledByDefault;
-    doc[FPSTR(HA_UNIQUE_ID)] = this->getObjectId(F("diagnostic"));
-    doc[FPSTR(HA_OBJECT_ID)] = this->getObjectId(F("diagnostic"));
-    doc[FPSTR(HA_ENTITY_CATEGORY)] = F("diagnostic");
-    doc[FPSTR(HA_DEVICE_CLASS)] = F("problem");
-    doc[FPSTR(HA_NAME)] = F("Diagnostic");
-    doc[FPSTR(HA_ICON)] = F("mdi:account-wrench");
-    doc[FPSTR(HA_STATE_TOPIC)] = this->getDeviceTopic(F("state"));
-    doc[FPSTR(HA_VALUE_TEMPLATE)] = F("{{ iif(value_json.states.diagnostic, 'ON', 'OFF') }}");
-    doc[FPSTR(HA_EXPIRE_AFTER)] = 120;
-    doc.shrinkToFit();
 
-    return this->publish(this->getTopic(FPSTR(HA_ENTITY_BINARY_SENSOR), F("diagnostic")).c_str(), doc);
+    return publishBinarySensorState(F("diagnostic"),F("Diagnostic"),
+                                    F("problem"),
+                                    F("{{ iif(value_json.states.diagnostic, 'ON', 'OFF') }}"),
+                                    F("{{ iif(value_json.states.otStatus, 'online', 'offline') }}"),
+                                    F("mdi:account-wrench"), enabledByDefault);
+
   }
 
   bool publishStateExtPump(bool enabledByDefault = true) {

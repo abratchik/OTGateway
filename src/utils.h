@@ -469,6 +469,17 @@ void settingsToJson(const Settings& src, JsonVariant dst, bool safe = false) {
     dst["cascadeControl"]["output"]["onLossConnection"] = src.cascadeControl.output.onLossConnection;
     dst["cascadeControl"]["output"]["onEnabledHeating"] = src.cascadeControl.output.onEnabledHeating;
   }
+
+  if(!safe ) {
+    dst["externalDev"]["use"] = src.externalDev.use;
+    dst["externalDev"]["gpio"] = src.externalDev.gpio;
+    dst["externalDev"]["caption"] = src.externalDev.caption;
+  }
+  
+  if(src.externalDev.use)
+    dst["externalDev"]["state"] = src.externalDev.state;
+  
+  
 }
 
 inline void safeSettingsToJson(const Settings& src, JsonVariant dst) {
@@ -1524,6 +1535,54 @@ bool jsonToSettings(const JsonVariantConst src, Settings& dst, bool safe = false
     }
   }
 
+  if(!safe) {
+    // external device
+    if (src["externalDev"]["use"].is<bool>()) {
+      bool value = src["externalDev"]["use"].as<bool>();
+
+      if (value != dst.externalDev.use) {
+        dst.externalDev.use = value;
+        changed = true;
+      }
+    }
+
+    if (!src["externalDev"]["gpio"].isNull()) {
+      if (src["externalDev"]["gpio"].is<JsonString>() && src["externalDev"]["gpio"].as<JsonString>().size() == 0) {
+        if (dst.externalDev.gpio != GPIO_IS_NOT_CONFIGURED) {
+          dst.externalDev.gpio = GPIO_IS_NOT_CONFIGURED;
+          changed = true;
+        }
+        
+      } else {
+        unsigned char value = src["externalDev"]["gpio"].as<unsigned char>();
+
+        if (GPIO_IS_VALID(value) && value != dst.externalDev.gpio) {
+          dst.externalDev.gpio = value;
+          changed = true;
+        }
+      }
+    }
+    
+    if (!src["externalDev"]["caption"].isNull()) {
+      String value = src["externalDev"]["caption"].as<String>();
+
+      if (value.length() < sizeof(dst.externalDev.caption) && !String(dst.externalDev.caption).equals(value)) {
+        strcpy(dst.externalDev.caption, value.c_str());
+        changed = true;
+      }
+    }
+
+  }
+
+  if (dst.externalDev.use && src["externalDev"]["state"].is<bool>()) {
+    bool value = src["externalDev"]["state"].as<bool>();
+
+    if (value != dst.externalDev.state) {
+      dst.externalDev.state = value;
+      changed = true;
+    }
+  }
+
   // force check emergency target
   {
     float value = !src["emergency"]["target"].isNull() ? src["emergency"]["target"].as<float>() : dst.emergency.target;
@@ -1613,6 +1672,7 @@ void varsToJson(const Variables& src, JsonVariant dst) {
   dst["states"]["fault"] = src.states.fault;
   dst["states"]["diagnostic"] = src.states.diagnostic;
   dst["states"]["externalPump"] = src.states.externalPump;
+  dst["states"]["externalDev"] = src.states.externalDev;
   dst["states"]["mqtt"] = src.states.mqtt;
 
   dst["sensors"]["modulation"] = roundd(src.sensors.modulation, 2);

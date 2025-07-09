@@ -149,6 +149,13 @@ struct Settings {
   } externalPump;
 
   struct {
+    bool use = false;
+    byte gpio = DEFAULT_EXT_DEV_GPIO;
+    char caption[41] = DEFAULT_EXT_DEV_CAPTION;
+    bool state = false;
+  } externalDev;
+
+  struct {
     struct {
       bool enable = false;
       byte gpio = GPIO_IS_NOT_CONFIGURED;
@@ -180,6 +187,7 @@ struct Variables {
     bool fault = false;
     bool diagnostic = false;
     bool externalPump = false;
+    bool externalDev = false;
     bool mqtt = false;
   } states;
 

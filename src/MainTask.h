@@ -137,6 +137,7 @@ protected:
     this->ledStatus();
     this->cascadeControl();
     this->externalPump();
+    this->externalDev();
     this->yield();
 
 
@@ -586,5 +587,45 @@ protected:
 
       Log.sinfoln("EXTPUMP", F("Enabled: anti stuck"));
     }
+  }
+
+  void externalDev() {
+    static uint8_t configuredGpio = GPIO_IS_NOT_CONFIGURED;
+
+    if(!settings.externalDev.use) return;
+
+    // configure output
+    // if settings are different than the configured GPIO, update
+    if (settings.externalDev.gpio != configuredGpio) {
+      if (configuredGpio != GPIO_IS_NOT_CONFIGURED) {
+        digitalWrite(configuredGpio, LOW);
+      }
+      
+      if (GPIO_IS_VALID(settings.externalDev.gpio)) {
+        configuredGpio = settings.externalDev.gpio;
+        pinMode(configuredGpio, OUTPUT);
+        digitalWrite(configuredGpio, LOW);
+
+      } else if (configuredGpio != GPIO_IS_NOT_CONFIGURED) {
+        configuredGpio = GPIO_IS_NOT_CONFIGURED;
+      }
+    }
+
+    if (configuredGpio == GPIO_IS_NOT_CONFIGURED) {
+      if (vars.states.externalDev) {
+        vars.states.externalDev = false;
+
+        Log.sinfoln("EXTDEV", F("Disabled: use = off"));
+      }
+
+      return;
+    }
+
+    // output configured update relay if required
+    if(settings.externalDev.state != vars.states.externalDev ) {
+      digitalWrite(configuredGpio, settings.externalDev.state? HIGH:LOW );
+      vars.states.externalDev = settings.externalDev.state;
+    }
+
   }
 };

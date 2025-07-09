@@ -87,7 +87,7 @@
 #endif
 
 #ifndef DEFAULT_MQTT_SERVER
-  #define DEFAULT_MQTT_SERVER ""
+  #define DEFAULT_MQTT_SERVER "192.168.0.1"
 #endif
 
 #ifndef DEFAULT_MQTT_PORT
@@ -95,7 +95,7 @@
 #endif
 
 #ifndef DEFAULT_MQTT_USER
-  #define DEFAULT_MQTT_USER ""
+  #define DEFAULT_MQTT_USER "opentherm"
 #endif
 
 #ifndef DEFAULT_MQTT_PASSWORD
@@ -132,6 +132,14 @@
 
 #ifndef DEFAULT_EXT_PUMP_GPIO
   #define DEFAULT_EXT_PUMP_GPIO GPIO_IS_NOT_CONFIGURED
+#endif
+
+#ifndef DEFAULT_EXT_DEV_GPIO
+  #define DEFAULT_EXT_DEV_GPIO GPIO_IS_NOT_CONFIGURED
+#endif
+
+#ifndef DEFAULT_EXT_DEV_CAPTION
+  #define DEFAULT_EXT_DEV_CAPTION "Device"
 #endif
 
 #ifndef PROGMEM
